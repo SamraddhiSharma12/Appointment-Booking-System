@@ -2,7 +2,7 @@ import React, {useEffect, useState, useContext} from 'react';
 import {useParams} from "react-router-dom";
 import { AppContext } from '../context/AppContext'
 import { pictures } from '../assets/pictures/assets_frontend/assets';
-import RelatedDoctors from '../components/relatedDoctors';
+import RelatedDoctors from '../components/RelatedDoctors';
 
 
 const Appointments = () => {

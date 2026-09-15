@@ -1,0 +1,24 @@
+import mongoose from "mongoose";
+
+const appointmentSchema = new mongoose.Schema(
+  {
+    userId: { type: String, required: true },
+    docId: { type: String, required: true },
+    slotDate: { type: String, required: true }, // e.g. "21_7_2025"
+    slotTime: { type: String, required: true }, // e.g. "10:00 AM"
+    userData: { type: Object, required: true },
+    docData: { type: Object, required: true },
+    amount: { type: Number, required: true },
+    date: { type: Number, required: true }, // booking created timestamp
+    cancelled: { type: Boolean, default: false },
+    payment: { type: Boolean, default: false },
+    isCompleted: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
+
+const appointmentModel =
+  mongoose.models.appointment ||
+  mongoose.model("appointment", appointmentSchema);
+
+export default appointmentModel;

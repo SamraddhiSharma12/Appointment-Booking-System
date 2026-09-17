@@ -1,10 +1,39 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { AdminContext } from '../../context/AdminContext'
-import { AppContext } from '../../context/AppContext'
+import {
+    Box, Typography, Card, CardContent, Avatar,
+    Chip, IconButton, Divider, Skeleton
+} from '@mui/material'
+import {
+    LocalHospitalOutlined, CalendarMonthOutlined,
+    PeopleOutlined, CancelOutlined, CheckCircleOutlined,
+    MoreHorizOutlined
+} from '@mui/icons-material'
 
-const AdminDashboard = () => {
+const StatCard = ({ label, value, icon, color, bg }) => (
+    <Card elevation={0} sx={{ border: '1px solid #f3f0ff', borderRadius: 3, flex: 1 }}>
+        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 3 }}>
+            <Box sx={{
+                width: 56, height: 56, borderRadius: 2,
+                background: bg, display: 'flex',
+                alignItems: 'center', justifyContent: 'center'
+            }}>
+                {React.cloneElement(icon, { sx: { color, fontSize: 26 } })}
+            </Box>
+            <Box>
+                <Typography variant='h4' sx={{ fontWeight: 800, color: '#1e1b4b', lineHeight: 1 }}>
+                    {value}
+                </Typography>
+                <Typography variant='body2' sx={{ color: '#6b7280', mt: 0.5, fontWeight: 500 }}>
+                    {label}
+                </Typography>
+            </Box>
+        </CardContent>
+    </Card>
+)
+
+const Dashboard = () => {
     const { aToken, backendUrl } = useContext(AdminContext)
-    const { currency } = useContext(AppContext)
     const [dashData, setDashData] = useState(null)
 
     const getDashData = async () => {
@@ -14,99 +43,98 @@ const AdminDashboard = () => {
             })
             const data = await res.json()
             if (data.success) setDashData(data.dashData)
-        } catch (error) {
-            console.log(error)
-        }
+        } catch (err) { console.log(err) }
     }
 
     const cancelAppointment = async (appointmentId) => {
         try {
-            const res = await fetch(`${backendUrl}/api/admin/cancel-appointment`, {
+            await fetch(`${backendUrl}/api/admin/cancel-appointment`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    atoken: aToken
-                },
+                headers: { 'Content-Type': 'application/json', atoken: aToken },
                 body: JSON.stringify({ appointmentId })
             })
-            const data = await res.json()
-            if (data.success) getDashData()
-        } catch (error) {
-            console.log(error)
-        }
+            getDashData()
+        } catch (err) { console.log(err) }
     }
 
-    useEffect(() => {
-        if (aToken) getDashData()
-    }, [aToken])
-
-    if (!dashData) return (
-        <div className='flex items-center justify-center h-64'>
-            <p className='text-gray-400'>Loading dashboard...</p>
-        </div>
-    )
-
-    const stats = [
-        { label: 'Total Doctors', value: dashData.doctors, icon: '👨‍⚕️', color: 'bg-blue-50 text-blue-600' },
-        { label: 'Total Appointments', value: dashData.appointments, icon: '📅', color: 'bg-purple-50 text-purple-600' },
-        { label: 'Total Patients', value: dashData.patients, icon: '🧑‍🤝‍🧑', color: 'bg-green-50 text-green-600' },
-    ]
+    useEffect(() => { if (aToken) getDashData() }, [aToken])
 
     return (
-        <div className='p-6'>
-            <h2 className='text-2xl font-semibold text-gray-800 mb-6'>Admin Dashboard</h2>
+        <Box sx={{ p: 4 }}>
+            <Typography variant='h5' sx={{ fontWeight: 800, color: '#1e1b4b', mb: 0.5 }}>
+                Admin Dashboard
+            </Typography>
+            <Typography variant='body2' sx={{ color: '#9ca3af', mb: 4 }}>
+                Welcome back! Here's what's happening today.
+            </Typography>
 
-            {/* Stats */}
-            <div className='grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8'>
-                {stats.map((stat, i) => (
-                    <div key={i} className='bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-4'>
-                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl ${stat.color}`}>
-                            {stat.icon}
-                        </div>
-                        <div>
-                            <p className='text-2xl font-bold text-gray-800'>{stat.value}</p>
-                            <p className='text-sm text-gray-500'>{stat.label}</p>
-                        </div>
-                    </div>
-                ))}
-            </div>
+            {/* Stat Cards */}
+            <Box sx={{ display: 'flex', gap: 3, mb: 4, flexWrap: 'wrap' }}>
+                {!dashData ? (
+                    [1, 2, 3].map(i => <Skeleton key={i} variant='rounded' height={100} sx={{ flex: 1, borderRadius: 3 }} />)
+                ) : (
+                    <>
+                        <StatCard label='Total Doctors' value={dashData.doctors} icon={<LocalHospitalOutlined />} color='#7c3aed' bg='#ede9fe' />
+                        <StatCard label='Total Appointments' value={dashData.appointments} icon={<CalendarMonthOutlined />} color='#2563eb' bg='#dbeafe' />
+                        <StatCard label='Total Patients' value={dashData.patients} icon={<PeopleOutlined />} color='#059669' bg='#d1fae5' />
+                    </>
+                )}
+            </Box>
 
             {/* Latest Appointments */}
-            <div className='bg-white rounded-2xl shadow-sm border border-gray-100'>
-                <div className='px-6 py-4 border-b border-gray-100'>
-                    <h3 className='font-semibold text-gray-800'>Latest Appointments</h3>
-                </div>
-                <div className='divide-y divide-gray-50'>
-                    {dashData.latestAppointments.map((item, index) => (
-                        <div key={index} className='flex items-center gap-4 px-6 py-4'>
-                            <img
-                                src={item.docData.image}
-                                className='w-10 h-10 rounded-full object-cover bg-gray-100'
-                                alt=""
-                            />
-                            <div className='flex-1 min-w-0'>
-                                <p className='font-medium text-gray-800 text-sm truncate'>{item.docData.name}</p>
-                                <p className='text-xs text-gray-500'>{item.slotDate.split('_').join('/')} | {item.slotTime}</p>
-                            </div>
-                            <div className='text-sm'>
-                                {item.cancelled
-                                    ? <span className='text-red-500 bg-red-50 px-3 py-1 rounded-full text-xs'>Cancelled</span>
-                                    : item.isCompleted
-                                    ? <span className='text-green-500 bg-green-50 px-3 py-1 rounded-full text-xs'>Completed</span>
-                                    : <button
-                                        onClick={() => cancelAppointment(item._id)}
-                                        className='text-red-400 hover:text-red-600 text-xs border border-red-200 px-3 py-1 rounded-full hover:bg-red-50 transition-all'
-                                    >
-                                        Cancel
-                                    </button>
-                                }
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
+            <Card elevation={0} sx={{ border: '1px solid #f3f0ff', borderRadius: 3 }}>
+                <Box sx={{ px: 3, py: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Typography variant='subtitle1' sx={{ fontWeight: 700, color: '#1e1b4b' }}>
+                        Latest Appointments
+                    </Typography>
+                    <IconButton size='small'><MoreHorizOutlined /></IconButton>
+                </Box>
+                <Divider sx={{ borderColor: '#f3f0ff' }} />
+
+                {!dashData ? (
+                    <Box sx={{ p: 3 }}>
+                        {[1, 2, 3].map(i => <Skeleton key={i} variant='rounded' height={60} sx={{ mb: 1, borderRadius: 2 }} />)}
+                    </Box>
+                ) : (
+                    dashData.latestAppointments.map((item, i) => (
+                        <Box key={i}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, px: 3, py: 2 }}>
+                                <Avatar src={item.docData.image} sx={{ width: 42, height: 42 }} />
+                                <Box sx={{ flex: 1 }}>
+                                    <Typography variant='body2' sx={{ fontWeight: 600, color: '#1e1b4b' }}>
+                                        {item.docData.name}
+                                    </Typography>
+                                    <Typography variant='caption' sx={{ color: '#9ca3af' }}>
+                                        {item.slotDate.split('_').join('/')} · {item.slotTime}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Chip
+                                        label={item.payment ? 'Paid' : 'Unpaid'}
+                                        size='small'
+                                        sx={{
+                                            fontSize: '0.65rem', fontWeight: 600,
+                                            background: item.payment ? '#d1fae5' : '#f3f4f6',
+                                            color: item.payment ? '#059669' : '#6b7280'
+                                        }}
+                                    />
+                                    {item.cancelled
+                                        ? <Chip label='Cancelled' size='small' sx={{ fontSize: '0.65rem', background: '#fee2e2', color: '#dc2626', fontWeight: 600 }} />
+                                        : item.isCompleted
+                                        ? <Chip icon={<CheckCircleOutlined sx={{ fontSize: '14px !important' }} />} label='Completed' size='small' sx={{ fontSize: '0.65rem', background: '#d1fae5', color: '#059669', fontWeight: 600 }} />
+                                        : <IconButton size='small' onClick={() => cancelAppointment(item._id)} sx={{ color: '#ef4444', '&:hover': { background: '#fee2e2' } }}>
+                                            <CancelOutlined sx={{ fontSize: 18 }} />
+                                          </IconButton>
+                                    }
+                                </Box>
+                            </Box>
+                            {i < dashData.latestAppointments.length - 1 && <Divider sx={{ borderColor: '#faf5ff', mx: 3 }} />}
+                        </Box>
+                    ))
+                )}
+            </Card>
+        </Box>
     )
 }
 
-export default AdminDashboard
+export default Dashboard

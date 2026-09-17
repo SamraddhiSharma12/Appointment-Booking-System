@@ -1,4 +1,6 @@
 import React, { useContext } from 'react'
+import { AppBar, Toolbar, Typography, Button, Box, Chip } from '@mui/material'
+import { LogoutOutlined } from '@mui/icons-material'
 import { AdminContext } from '../context/AdminContext'
 import { DoctorContext } from '../context/DoctorContext'
 import { useNavigate } from 'react-router-dom'
@@ -9,32 +11,51 @@ const Navbar = () => {
     const navigate = useNavigate()
 
     const logout = () => {
-        if (aToken) {
-            setAToken('')
-            localStorage.removeItem('aToken')
-        }
-        if (dToken) {
-            setDToken('')
-            localStorage.removeItem('dToken')
-        }
+        if (aToken) { setAToken(''); localStorage.removeItem('aToken') }
+        if (dToken) { setDToken(''); localStorage.removeItem('dToken') }
         navigate('/login')
     }
 
     return (
-        <div className='flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200 shadow-sm'>
-            <div className='flex items-center gap-3'>
-                <h1 className='text-purple-600 text-xl font-bold'>NOVINA MEDCARE</h1>
-                <span className={`text-xs px-3 py-1 rounded-full font-medium ${aToken ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
-                    {aToken ? 'Admin' : 'Doctor'}
-                </span>
-            </div>
-            <button
-                onClick={logout}
-                className='bg-purple-600 text-white text-sm px-6 py-2 rounded-full hover:bg-purple-700 transition-all'
-            >
-                Logout
-            </button>
-        </div>
+        <AppBar position='sticky' elevation={0} sx={{
+            background: '#fff',
+            borderBottom: '1px solid #ede9fe',
+            zIndex: 1200
+        }}>
+            <Toolbar sx={{ justifyContent: 'space-between', px: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Typography variant='h6' sx={{ fontWeight: 800, color: '#7c3aed', letterSpacing: '-0.5px' }}>
+                        NOVINA MEDCARE
+                    </Typography>
+                    <Chip
+                        label={aToken ? 'Admin' : 'Doctor'}
+                        size='small'
+                        sx={{
+                            background: aToken ? '#ede9fe' : '#dbeafe',
+                            color: aToken ? '#7c3aed' : '#2563eb',
+                            fontWeight: 700,
+                            fontSize: '0.7rem'
+                        }}
+                    />
+                </Box>
+                <Button
+                    onClick={logout}
+                    variant='contained'
+                    startIcon={<LogoutOutlined sx={{ fontSize: 16 }} />}
+                    sx={{
+                        background: '#7c3aed',
+                        borderRadius: '50px',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        px: 3,
+                        boxShadow: 'none',
+                        '&:hover': { background: '#6d28d9', boxShadow: 'none' }
+                    }}
+                >
+                    Logout
+                </Button>
+            </Toolbar>
+        </AppBar>
     )
 }
 

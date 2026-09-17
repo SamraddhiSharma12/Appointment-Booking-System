@@ -1,14 +1,21 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { AdminContext } from '../../context/AdminContext'
+import {
+    Box, Typography, Card, CardContent, CardMedia,
+    Chip, Button, Skeleton, Switch, FormControlLabel
+} from '@mui/material'
+import { GroupsOutlined } from '@mui/icons-material'
 import Toast from '../../components/Toast'
 import useToast from '../../hooks/useToast'
 
 const DoctorsList = () => {
     const { aToken, backendUrl } = useContext(AdminContext)
     const [doctors, setDoctors] = useState([])
+    const [loading, setLoading] = useState(true)
     const { toast, showToast, hideToast } = useToast()
 
     const getDoctors = async () => {
+        setLoading(true)
         try {
             const res = await fetch(`${backendUrl}/api/admin/all-doctors`, {
                 headers: { atoken: aToken }
@@ -16,9 +23,8 @@ const DoctorsList = () => {
             const data = await res.json()
             if (data.success) setDoctors(data.doctors)
             else showToast(data.message, 'error')
-        } catch (error) {
-            showToast('Failed to load doctors', 'error')
-        }
+        } catch (err) { showToast('Failed to load', 'error') }
+        setLoading(false)
     }
 
     const toggleAvailability = async (docId) => {
@@ -29,63 +35,80 @@ const DoctorsList = () => {
                 body: JSON.stringify({ docId })
             })
             const data = await res.json()
-            if (data.success) {
-                showToast('Availability updated', 'success')
-                getDoctors()
-            } else showToast(data.message, 'error')
-        } catch (error) {
-            showToast('Something went wrong', 'error')
-        }
+            if (data.success) { showToast('Availability updated', 'success'); getDoctors() }
+            else showToast(data.message, 'error')
+        } catch (err) { showToast('Something went wrong', 'error') }
     }
 
-    useEffect(() => {
-        if (aToken) getDoctors()
-    }, [aToken])
+    useEffect(() => { if (aToken) getDoctors() }, [aToken])
 
     return (
-        <div className='p-6'>
+        <Box sx={{ p: 4 }}>
             {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
 
-            <h2 className='text-2xl font-semibold text-gray-800 mb-6'>All Doctors ({doctors.length})</h2>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+                <GroupsOutlined sx={{ color: '#7c3aed', fontSize: 28 }} />
+                <Typography variant='h5' sx={{ fontWeight: 800, color: '#1e1b4b' }}>
+                    Doctors List
+                </Typography>
+                <Chip label={`${doctors.length} doctors`} size='small' sx={{ background: '#ede9fe', color: '#7c3aed', fontWeight: 700 }} />
+            </Box>
+            <Typography variant='body2' sx={{ color: '#9ca3af', mb: 4 }}>
+                Manage doctor availability and view their profiles.
+            </Typography>
 
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5'>
-                {doctors.map((doc, index) => (
-                    <div key={index} className='bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all'>
-                        <div className='bg-indigo-50 h-48 flex items-center justify-center'>
-                            <img src={doc.image} className='h-full w-full object-cover' alt="" />
-                        </div>
-                        <div className='p-4'>
-                            <p className='font-semibold text-gray-800'>{doc.name}</p>
-                            <p className='text-sm text-gray-500 mt-1'>{doc.speciality}</p>
-                            <p className='text-sm text-gray-400'>{doc.degree} · {doc.experience}</p>
-                            <p className='text-sm font-medium text-purple-600 mt-1'>₹{doc.fees} / visit</p>
-
-                            <div className='flex items-center justify-between mt-4'>
-                                <div className='flex items-center gap-2'>
-                                    <div className={`w-2 h-2 rounded-full ${doc.available ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                                    <span className={`text-xs font-medium ${doc.available ? 'text-green-600' : 'text-gray-400'}`}>
-                                        {doc.available ? 'Available' : 'Unavailable'}
-                                    </span>
-                                </div>
-                                <button
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 3 }}>
+                {loading
+                    ? [1,2,3,4,5,6].map(i => <Skeleton key={i} variant='rounded' height={320} sx={{ borderRadius: 3 }} />)
+                    : doctors.map((doc, i) => (
+                        <Card key={i} elevation={0} sx={{
+                            border: '1px solid #f3f0ff', borderRadius: 3,
+                            overflow: 'hidden', transition: 'all 0.2s',
+                            '&:hover': { boxShadow: '0 4px 24px #ede9fe', transform: 'translateY(-2px)' }
+                        }}>
+                            <Box sx={{ background: '#faf5ff', height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                                <CardMedia component='img' image={doc.image} alt={doc.name}
+                                    sx={{ height: '100%', width: '100%', objectFit: 'cover' }} />
+                            </Box>
+                            <CardContent sx={{ p: 2.5 }}>
+                                <Typography variant='subtitle1' sx={{ fontWeight: 700, color: '#1e1b4b' }}>{doc.name}</Typography>
+                                <Typography variant='body2' color='text.secondary' sx={{ mb: 0.5 }}>{doc.speciality}</Typography>
+                                <Typography variant='caption' color='text.secondary'>{doc.degree} · {doc.experience}</Typography>
+                                <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <Typography variant='body2' sx={{ fontWeight: 700, color: '#7c3aed' }}>₹{doc.fees}/visit</Typography>
+                                    <Chip
+                                        label={doc.available ? 'Available' : 'Unavailable'}
+                                        size='small'
+                                        sx={{
+                                            fontSize: '0.65rem', fontWeight: 600,
+                                            background: doc.available ? '#d1fae5' : '#f3f4f6',
+                                            color: doc.available ? '#059669' : '#9ca3af'
+                                        }}
+                                    />
+                                </Box>
+                                <Button
+                                    fullWidth
+                                    variant='outlined'
                                     onClick={() => toggleAvailability(doc._id)}
-                                    className={`text-xs px-3 py-1 rounded-full border transition-all ${doc.available
-                                        ? 'border-red-200 text-red-400 hover:bg-red-50'
-                                        : 'border-green-200 text-green-500 hover:bg-green-50'
-                                    }`}
+                                    sx={{
+                                        mt: 2, borderRadius: 50, textTransform: 'none',
+                                        fontSize: '0.75rem', fontWeight: 600,
+                                        borderColor: doc.available ? '#fca5a5' : '#a78bfa',
+                                        color: doc.available ? '#ef4444' : '#7c3aed',
+                                        '&:hover': {
+                                            background: doc.available ? '#fee2e2' : '#ede9fe',
+                                            borderColor: doc.available ? '#ef4444' : '#7c3aed'
+                                        }
+                                    }}
                                 >
                                     {doc.available ? 'Disable' : 'Enable'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {doctors.length === 0 && (
-                <p className='text-center text-gray-400 py-16'>No doctors found</p>
-            )}
-        </div>
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    ))
+                }
+            </Box>
+        </Box>
     )
 }
 

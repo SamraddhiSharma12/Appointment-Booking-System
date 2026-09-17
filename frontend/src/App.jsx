@@ -1,15 +1,15 @@
 import React from 'react'
 import { Route, Routes } from 'react-router-dom'
-import Home from './pages/Home';
-import Doctors from './pages/Doctors';
-import Login from './pages/Login';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import MyAppointments from './pages/MyAppointments';
-import MyProfile from './pages/MyProfile';
-import Appointments from './pages/Appointments';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+import Home from './pages/Home.jsx';
+import Doctors from './pages/Doctors.jsx';
+import Login from './pages/Login.jsx';
+import About from './pages/About.jsx';
+import Contact from './pages/Contact.jsx';
+import MyAppointments from './pages/MyAppointments.jsx';
+import MyProfile from './pages/MyProfile.jsx';
+import Appointments from './pages/Appointments.jsx';
+import Navbar from './components/Navbar.jsx';
+import Footer from './components/Footer.jsx';
 
 const App = () => {
   return (

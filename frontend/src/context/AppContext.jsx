@@ -3,6 +3,7 @@ import { createContext, useEffect, useState } from "react";
 
 export const AppContext = createContext()
 export const AppContextProvider = (props)=>{
+     const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'
     const currencySymbol = '$'
      
 
@@ -12,7 +13,7 @@ export const AppContextProvider = (props)=>{
 
     const getDoctorsData = async () => {
         try {
-            const response = await fetch('/api/doctor/list')
+            const response = await fetch(`${backendUrl}/api/doctor/list`)
             const data = await response.json()
             if (data.success) {
                 setDoctors(data.doctors)

@@ -8,15 +8,15 @@ import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 
 // Admin pages
-import AdminDashboard from './pages/Admin/Dashboard'
-import AllAppointments from './pages/Admin/AllAppointments'
-import AddDoctor from './pages/Admin/AddDoctor'
-import DoctorsList from './pages/Admin/DoctorsList'
+import AdminDashboard from './pages/admin/Dashboard'
+import AllAppointments from './pages/admin/AllAppointments'
+import AddDoctor from './pages/admin/AddDoctor'
+import DoctorsList from './pages/admin/DoctorsList'
 
 // Doctor pages
-import DoctorDashboard from './pages/Doctor/Dashboard'
-import DoctorAppointments from './pages/Doctor/Appointments'
-import DoctorProfile from './pages/Doctor/Profile'
+import DoctorDashboard from './pages/doctor/Dashboard'
+import DoctorAppointments from './pages/doctor/Appointments'
+import DoctorProfile from './pages/doctor/Profile'
 
 const App = () => {
     const { aToken } = useContext(AdminContext)

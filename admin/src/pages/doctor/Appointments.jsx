@@ -1,142 +1,137 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { DoctorContext } from '../../context/DoctorContext'
-import {
-    Box, Typography, Card, Avatar, Chip,
-    IconButton, Skeleton, Tooltip
-} from '@mui/material'
-import { CheckCircleOutlined, CancelOutlined, EventNoteOutlined } from '@mui/icons-material'
 import Toast from '../../components/Toast'
 import useToast from '../../hooks/useToast'
 
 const Appointments = () => {
     const { dToken, backendUrl } = useContext(DoctorContext)
     const [appointments, setAppointments] = useState([])
-    const [loading, setLoading] = useState(true)
     const { toast, showToast, hideToast } = useToast()
 
     const getAppointments = async () => {
-        setLoading(true)
         try {
-            const res = await fetch(`${backendUrl}/api/doctor/appointments`, { headers: { dtoken: dToken } })
+            const res = await fetch(`${backendUrl}/api/doctor/appointments`, {
+                headers: { dtoken: dToken }
+            })
             const data = await res.json()
             if (data.success) setAppointments(data.appointments.reverse())
             else showToast(data.message, 'error')
-        } catch (err) { showToast('Failed to load', 'error') }
-        setLoading(false)
+        } catch (error) {
+            showToast('Failed to load appointments', 'error')
+        }
     }
 
-    const complete = async (id) => {
+    const completeAppointment = async (appointmentId) => {
         try {
             const res = await fetch(`${backendUrl}/api/doctor/complete-appointment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', dtoken: dToken },
-                body: JSON.stringify({ appointmentId: id })
+                body: JSON.stringify({ appointmentId })
             })
             const data = await res.json()
-            if (data.success) { showToast('Marked as completed', 'success'); getAppointments() }
-        } catch (err) { showToast('Something went wrong', 'error') }
+            if (data.success) {
+                showToast('Appointment marked complete', 'success')
+                getAppointments()
+            } else showToast(data.message, 'error')
+        } catch (error) {
+            showToast('Something went wrong', 'error')
+        }
     }
 
-    const cancel = async (id) => {
+    const cancelAppointment = async (appointmentId) => {
         try {
             const res = await fetch(`${backendUrl}/api/doctor/cancel-appointment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', dtoken: dToken },
-                body: JSON.stringify({ appointmentId: id })
+                body: JSON.stringify({ appointmentId })
             })
             const data = await res.json()
-            if (data.success) { showToast('Appointment cancelled', 'success'); getAppointments() }
-        } catch (err) { showToast('Something went wrong', 'error') }
+            if (data.success) {
+                showToast('Appointment cancelled', 'success')
+                getAppointments()
+            } else showToast(data.message, 'error')
+        } catch (error) {
+            showToast('Something went wrong', 'error')
+        }
     }
 
-    useEffect(() => { if (dToken) getAppointments() }, [dToken])
-
-    const headers = ['#', 'Patient', 'Date & Time', 'Payment', 'Fees', 'Actions']
+    useEffect(() => {
+        if (dToken) getAppointments()
+    }, [dToken])
 
     return (
-        <Box sx={{ p: 4 }}>
+        <div className='p-6'>
             {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
-                <EventNoteOutlined sx={{ color: '#7c3aed', fontSize: 28 }} />
-                <Typography variant='h5' sx={{ fontWeight: 800, color: '#1e1b4b' }}>My Appointments</Typography>
-            </Box>
-            <Typography variant='body2' sx={{ color: '#9ca3af', mb: 4 }}>Manage your upcoming and past appointments.</Typography>
+            <h2 className='text-2xl font-semibold text-gray-800 mb-6'>My Appointments</h2>
 
-            <Card elevation={0} sx={{ border: '1px solid #f3f0ff', borderRadius: 3, overflow: 'hidden' }}>
-                <Box sx={{ display: 'grid', gridTemplateColumns: '0.3fr 2fr 1.5fr 0.8fr 0.8fr 1.2fr', gap: 2, px: 3, py: 2, background: '#faf5ff' }}>
-                    {headers.map(h => (
-                        <Typography key={h} variant='caption' sx={{ fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</Typography>
+            <div className='bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden'>
+                <div className='hidden sm:grid grid-cols-[0.5fr_2fr_1.5fr_1.5fr_1fr_1.5fr] gap-2 px-6 py-4 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide'>
+                    <p>#</p>
+                    <p>Patient</p>
+                    <p>Date & Time</p>
+                    <p>Payment</p>
+                    <p>Fees</p>
+                    <p>Actions</p>
+                </div>
+
+                <div className='divide-y divide-gray-50'>
+                    {appointments.map((item, index) => (
+                        <div key={index} className='flex flex-col sm:grid sm:grid-cols-[0.5fr_2fr_1.5fr_1.5fr_1fr_1.5fr] gap-2 items-start sm:items-center px-6 py-4 hover:bg-gray-50 transition-all'>
+                            <p className='text-gray-400 text-sm hidden sm:block'>{index + 1}</p>
+
+                            <div className='flex items-center gap-3'>
+                                <img src={item.userData.image} className='w-9 h-9 rounded-full object-cover bg-gray-100' alt="" />
+                                <div>
+                                    <p className='text-sm font-medium text-gray-800'>{item.userData.name}</p>
+                                    <p className='text-xs text-gray-400'>{item.userData.phone}</p>
+                                </div>
+                            </div>
+
+                            <p className='text-sm text-gray-600'>
+                                {item.slotDate.split('_').join('/')} <br />
+                                <span className='text-xs text-gray-400'>{item.slotTime}</span>
+                            </p>
+
+                            <div>
+                                {item.payment
+                                    ? <span className='text-blue-500 bg-blue-50 px-3 py-1 rounded-full text-xs font-medium'>Online</span>
+                                    : <span className='text-gray-400 bg-gray-50 px-3 py-1 rounded-full text-xs font-medium'>Cash</span>
+                                }
+                            </div>
+
+                            <p className='text-sm font-medium text-gray-700'>₹{item.amount}</p>
+
+                            <div className='flex gap-2 flex-wrap'>
+                                {item.cancelled
+                                    ? <span className='text-red-500 bg-red-50 px-3 py-1 rounded-full text-xs font-medium'>Cancelled</span>
+                                    : item.isCompleted
+                                    ? <span className='text-green-500 bg-green-50 px-3 py-1 rounded-full text-xs font-medium'>Completed</span>
+                                    : <>
+                                        <button
+                                            onClick={() => completeAppointment(item._id)}
+                                            className='text-xs bg-green-500 text-white px-3 py-1 rounded-full hover:bg-green-600 transition-all'
+                                        >
+                                            Complete
+                                        </button>
+                                        <button
+                                            onClick={() => cancelAppointment(item._id)}
+                                            className='text-xs border border-red-200 text-red-400 px-3 py-1 rounded-full hover:bg-red-50 transition-all'
+                                        >
+                                            Cancel
+                                        </button>
+                                    </>
+                                }
+                            </div>
+                        </div>
                     ))}
-                </Box>
+                </div>
 
-                {loading ? (
-                    <Box sx={{ p: 3 }}>
-                        {[1,2,3,4].map(i => <Skeleton key={i} variant='rounded' height={64} sx={{ mb: 1, borderRadius: 2 }} />)}
-                    </Box>
-                ) : appointments.length === 0 ? (
-                    <Box sx={{ py: 10, textAlign: 'center' }}>
-                        <Typography color='text.secondary'>No appointments yet</Typography>
-                    </Box>
-                ) : appointments.map((item, i) => (
-                    <Box key={i} sx={{
-                        display: 'grid',
-                        gridTemplateColumns: '0.3fr 2fr 1.5fr 0.8fr 0.8fr 1.2fr',
-                        gap: 2, px: 3, py: 2, alignItems: 'center',
-                        borderTop: '1px solid #faf5ff',
-                        '&:hover': { background: '#fdfcff' },
-                        transition: 'background 0.2s'
-                    }}>
-                        <Typography variant='body2' color='text.secondary'>{i + 1}</Typography>
-
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <Avatar src={item.userData.image} sx={{ width: 36, height: 36 }} />
-                            <Box>
-                                <Typography variant='body2' sx={{ fontWeight: 600, color: '#1e1b4b', fontSize: '0.82rem' }}>{item.userData.name}</Typography>
-                                <Typography variant='caption' color='text.secondary'>{item.userData.phone}</Typography>
-                            </Box>
-                        </Box>
-
-                        <Box>
-                            <Typography variant='body2' sx={{ fontWeight: 500, color: '#374151', fontSize: '0.82rem' }}>{item.slotDate.split('_').join('/')}</Typography>
-                            <Typography variant='caption' color='text.secondary'>{item.slotTime}</Typography>
-                        </Box>
-
-                        <Chip
-                            label={item.payment ? 'Online' : 'Cash'}
-                            size='small'
-                            sx={{
-                                fontSize: '0.65rem', fontWeight: 600, width: 'fit-content',
-                                background: item.payment ? '#dbeafe' : '#f3f4f6',
-                                color: item.payment ? '#2563eb' : '#6b7280'
-                            }}
-                        />
-
-                        <Typography variant='body2' sx={{ fontWeight: 700, color: '#7c3aed' }}>₹{item.amount}</Typography>
-
-                        <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
-                            {item.cancelled
-                                ? <Chip label='Cancelled' size='small' sx={{ fontSize: '0.65rem', background: '#fee2e2', color: '#dc2626', fontWeight: 600 }} />
-                                : item.isCompleted
-                                ? <Chip label='Completed' size='small' sx={{ fontSize: '0.65rem', background: '#d1fae5', color: '#059669', fontWeight: 600 }} />
-                                : <>
-                                    <Tooltip title='Mark as complete'>
-                                        <IconButton size='small' onClick={() => complete(item._id)} sx={{ color: '#059669', '&:hover': { background: '#d1fae5' } }}>
-                                            <CheckCircleOutlined sx={{ fontSize: 20 }} />
-                                        </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title='Cancel appointment'>
-                                        <IconButton size='small' onClick={() => cancel(item._id)} sx={{ color: '#ef4444', '&:hover': { background: '#fee2e2' } }}>
-                                            <CancelOutlined sx={{ fontSize: 20 }} />
-                                        </IconButton>
-                                    </Tooltip>
-                                </>
-                            }
-                        </Box>
-                    </Box>
-                ))}
-            </Card>
-        </Box>
+                {appointments.length === 0 && (
+                    <p className='text-center text-gray-400 py-16'>No appointments yet</p>
+                )}
+            </div>
+        </div>
     )
 }
 

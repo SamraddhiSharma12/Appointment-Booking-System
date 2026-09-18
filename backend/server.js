@@ -18,6 +18,8 @@ connectCloudinary();
 app.use(express.json());
 app.use(cors());
 
+app.use("/images", express.static("public"));
+
 // API endpoints
 app.use("/api/user", userRouter);
 app.use("/api/doctor", doctorRouter);

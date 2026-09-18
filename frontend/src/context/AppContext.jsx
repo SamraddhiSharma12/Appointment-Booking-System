@@ -27,7 +27,7 @@ export const AppContextProvider = (props)=>{
 
     const loadUserProfileData = async () => {
         try {
-            const response = await fetch('/api/user/get-profile', {
+            const response = await fetch(`${backendUrl}/api/user/get-profile`, {
                 headers: { token }
             })
             const data = await response.json()
